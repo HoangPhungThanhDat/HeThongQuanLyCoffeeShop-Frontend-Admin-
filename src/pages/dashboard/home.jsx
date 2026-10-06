@@ -3,27 +3,20 @@ import {
   Typography,
   Card,
   CardBody,
-  Avatar,
   Chip,
-  Progress,
 } from "@material-tailwind/react";
 import {
   BanknotesIcon,
-  UsersIcon,
   ChartBarIcon,
   ClockIcon,
   CheckCircleIcon,
-  ShoppingCartIcon,
   CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   SparklesIcon,
   ArrowPathIcon,
   CalendarDaysIcon,
   FireIcon,
-  StarIcon,
-  EyeIcon,
   CubeIcon,
-  ExclamationTriangleIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
@@ -31,8 +24,10 @@ import { motion } from "framer-motion";
 import { StatisticsChart } from "@/widgets/charts";
 import BillAPI from "@/api/billApi";
 import productApi from "@/api/productApi";
+import reportApi from "@/api/reportApi";   // ✅ MỚI
 import { chartsConfig } from "@/configs/charts-config";
 import { CoffeeLoader } from "@/widgets/loaders";
+import { getImageUrl, handleImageError } from "@/utils/imageHelper";   // ✅ MỚI
 
 // ⭐ Helper: chuẩn hoá response từ BE về mảng
 const toArray = (res) => {
@@ -119,9 +114,8 @@ export function Home() {
   const getPaymentMethodDistribution = (bills) => {
     const methods = {
       CASH: 0,
-      CREDIT_CARD: 0,
-      E_WALLET: 0,
-      BANK_TRANSFER: 0,
+      CARD: 0,
+      MOBILE: 0,
     };
 
     bills.forEach((bill) => {
@@ -135,44 +129,14 @@ export function Home() {
       label:
         method === "CASH"
           ? "Tiền mặt"
-          : method === "CREDIT_CARD"
+          : method === "CARD"
           ? "Thẻ"
-          : method === "E_WALLET"
+          : method === "MOBILE"
           ? "Ví điện tử"
-          : "Chuyển khoản",
+          : method,
       value: total > 0 ? ((count / total) * 100).toFixed(1) : 0,
       count: count,
     }));
-  };
-
-  const getTopSellingProducts = (bills, products) => {
-    const productSales = {};
-
-    bills.forEach((bill) => {
-      if (bill.paymentStatus === "COMPLETED" && bill.billDetails) {
-        bill.billDetails.forEach((detail) => {
-          const productId = detail.productId;
-          if (!productSales[productId]) {
-            productSales[productId] = { quantity: 0, revenue: 0 };
-          }
-          productSales[productId].quantity += detail.quantity || 0;
-          productSales[productId].revenue +=
-            detail.quantity * detail.price || 0;
-        });
-      }
-    });
-
-    return Object.entries(productSales)
-      .map(([productId, data]) => {
-        const product = products.find((p) => p.id === parseInt(productId));
-        return {
-          ...product,
-          soldQuantity: data.quantity,
-          revenue: data.revenue,
-        };
-      })
-      .sort((a, b) => b.soldQuantity - a.soldQuantity)
-      .slice(0, 5);
   };
 
   // ==================== FETCH DATA ====================
@@ -182,16 +146,19 @@ export function Home() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // ⭐ SỬA: thêm params { size: 1000 }
-        const [billsRes, productsRes, newestRes] = await Promise.all([
+        // ✅ Khoảng thời gian cho Report API — 30 ngày gần nhất
+        const fromDate = dayjs().subtract(30, "day").format("YYYY-MM-DD");
+        const toDate = dayjs().format("YYYY-MM-DD");
+
+        const [billsRes, productsRes, newestRes, reportRes] = await Promise.all([
           BillAPI.getAll({ size: 1000 }),
           productApi.getAll({ size: 1000 }),
           productApi.getNewest(),
+          reportApi.getRevenue(fromDate, toDate),   // ✅ MỚI
         ]);
 
         if (!isMounted) return;
 
-        // ⭐ SỬA: dùng toArray để handle PageResponse hoặc Array
         const bills = toArray(billsRes);
         const products = toArray(productsRes);
         const newestProducts = toArray(newestRes);
@@ -219,7 +186,18 @@ export function Home() {
           )
           .reduce((sum, bill) => sum + (bill.totalAmount || 0), 0);
 
-        const topProducts = getTopSellingProducts(bills, products);
+        // ✅ Lấy top 5 sản phẩm từ Report API
+        const reportData = reportRes?.data ?? reportRes;
+        const topProducts = (reportData?.topProducts || [])
+          .slice(0, 5)
+          .map((p) => ({
+            id: p.productId,
+            name: p.name,
+            imageUrl: p.imageUrl,
+            soldQuantity: p.totalQuantity || 0,
+            revenue: p.totalRevenue || 0,
+          }));
+
         const paymentDist = getPaymentMethodDistribution(bills);
 
         setStats({
@@ -453,7 +431,10 @@ export function Home() {
                 {dayjs().format("DD/MM/YYYY")}
               </Typography>
             </div>
-            <button className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#8B5E3C] to-[#6d4c41] hover:from-[#6d4c41] hover:to-[#4e342e] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg shadow-[#8B5E3C]/30">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-11 h-11 rounded-xl bg-gradient-to-r from-[#8B5E3C] to-[#6d4c41] hover:from-[#6d4c41] hover:to-[#4e342e] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-lg shadow-[#8B5E3C]/30"
+            >
               <ArrowPathIcon className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </div>
@@ -555,7 +536,6 @@ export function Home() {
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
               >
                 <Card className="shadow-2xl rounded-3xl border border-amber-100 bg-white overflow-hidden">
-                  {/* Chart Header */}
                   <div className="p-5 lg:p-6 border-b border-amber-100 bg-gradient-to-r from-[#faf6f1] to-[#fffaf5]">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B5E3C] to-[#6d4c41] flex items-center justify-center shadow-lg shadow-[#8B5E3C]/30">
@@ -578,7 +558,6 @@ export function Home() {
                     </div>
                   </div>
 
-                  {/* Chart Body */}
                   <div className="p-5 lg:p-6">
                     <StatisticsChart {...chart} />
                   </div>
@@ -598,7 +577,6 @@ export function Home() {
             transition={{ delay: 0.3, duration: 0.4 }}
           >
             <Card className="shadow-2xl rounded-3xl border border-amber-100 bg-white overflow-hidden h-full">
-              {/* Header */}
               <div className="p-5 lg:p-6 border-b border-amber-100 bg-gradient-to-r from-[#faf6f1] to-[#fffaf5]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -621,10 +599,14 @@ export function Home() {
                 </div>
               </div>
 
-              {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full table-fixed min-w-[600px]">
-                  <colgroup><col className="w-[40%]" /><col className="w-[18%]" /><col className="w-[22%]" /><col className="w-[20%]" /></colgroup>
+                  <colgroup>
+                    <col className="w-[40%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[22%]" />
+                    <col className="w-[20%]" />
+                  </colgroup>
                   <thead>
                     <tr className="bg-[#faf6f1] border-b border-amber-100">
                       {["Sản phẩm", "Tồn kho", "Giá bán", "Trạng thái"].map(
@@ -651,20 +633,10 @@ export function Home() {
                           <td className="py-3 px-4 lg:px-6">
                             <div className="flex items-center gap-3 min-w-0">
                               <img
-                                src={
-                                  product.imageUrl
-                                    ? product.imageUrl.startsWith("http")
-                                      ? product.imageUrl
-                                      : `http://localhost:8080/api/products/image/${product.imageUrl}`
-                                    : "https://via.placeholder.com/80"
-                                }
+                                src={getImageUrl(product.imageUrl)}
                                 alt={product.name}
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src =
-                                    "https://via.placeholder.com/80";
-                                }}
-                                className="w-10 h-10 rounded-xl object-cover shadow-md border-2 border-white ring-2 ring-amber-100 group-hover:ring-[#8B5E3C]/40 transition-all duration-300 flex-shrink-0"
+                                onError={handleImageError}
+                                className="w-10 h-10 rounded-xl object-cover shadow-md border-2 border-white ring-2 ring-amber-100 group-hover:ring-[#8B5E3C]/40 transition-all duration-300 flex-shrink-0 bg-[#faf6f1]"
                               />
                               <Typography className="text-xs font-bold text-[#4e342e] group-hover:text-[#8B5E3C] transition-colors truncate">
                                 {product.name}
@@ -724,7 +696,6 @@ export function Home() {
             transition={{ delay: 0.4, duration: 0.4 }}
           >
             <Card className="shadow-2xl rounded-3xl border border-amber-100 bg-white overflow-hidden h-full">
-              {/* Header */}
               <div className="p-5 lg:p-6 border-b border-amber-100 bg-gradient-to-r from-[#faf6f1] to-[#fffaf5]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
@@ -735,13 +706,12 @@ export function Home() {
                       Top bán chạy
                     </Typography>
                     <Typography className="text-[10px] text-[#8B5E3C] font-medium">
-                      5 sản phẩm doanh số cao nhất
+                      5 sản phẩm doanh số cao nhất (30 ngày)
                     </Typography>
                   </div>
                 </div>
               </div>
 
-              {/* List */}
               <CardBody className="p-3 lg:p-4">
                 {topSellingProducts.length > 0 ? (
                   <div className="space-y-2">
@@ -771,19 +741,10 @@ export function Home() {
 
                         {/* Image */}
                         <img
-                          src={
-                            product.imageUrl
-                              ? product.imageUrl.startsWith("http")
-                                ? product.imageUrl
-                                : `http://localhost:8080/api/products/image/${product.imageUrl}`
-                              : "https://via.placeholder.com/80"
-                          }
+                          src={getImageUrl(product.imageUrl)}
                           alt={product.name}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "https://via.placeholder.com/80";
-                          }}
-                          className="w-10 h-10 rounded-xl object-cover shadow-md border-2 border-white ring-2 ring-amber-100 flex-shrink-0"
+                          onError={handleImageError}
+                          className="w-10 h-10 rounded-xl object-cover shadow-md border-2 border-white ring-2 ring-amber-100 flex-shrink-0 bg-[#faf6f1]"
                         />
 
                         {/* Info */}
@@ -812,7 +773,7 @@ export function Home() {
                       <span className="text-3xl">☕</span>
                     </div>
                     <Typography className="text-xs text-gray-400 italic">
-                      Chưa có dữ liệu bán hàng
+                      Chưa có dữ liệu bán hàng trong 30 ngày qua
                     </Typography>
                   </div>
                 )}
@@ -831,8 +792,9 @@ export function Home() {
           <SparklesIcon className="h-5 w-5 text-[#8B5E3C] flex-shrink-0 mt-0.5" />
           <Typography className="text-xs text-[#6d4c41] leading-relaxed">
             <span className="font-bold">Ghi chú:</span> Đây là dashboard tổng
-            quan của hệ thống Coffee Shop. Dữ liệu được cập nhật tự động theo
-            thời gian thực. Vui lòng refresh trang để xem số liệu mới nhất.
+            quan của hệ thống Coffee Shop. Top bán chạy được tính từ 30 ngày
+            gần nhất (chỉ tính đơn đã thanh toán). Vui lòng refresh trang để
+            xem số liệu mới nhất.
           </Typography>
         </motion.div>
       </div>

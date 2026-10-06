@@ -5,9 +5,9 @@
 # ☕ Coffee Shop Admin Dashboard
 ## Giao Diện Quản Trị (Frontend — Admin)
 
-**Một nơi duy nhất để vận hành cả quán cà phê — sản phẩm, đơn hàng, bàn, hóa đơn, khuyến mãi, báo cáo và thống kê**
+**Một nơi duy nhất để vận hành cả quán cà phê — sản phẩm, đơn hàng, bàn, hóa đơn, khuyến mãi, nhật ký hệ thống, báo cáo và thống kê**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-6366f1?style=for-the-badge)](#)
+[![Version](https://img.shields.io/badge/version-1.1.0-6366f1?style=for-the-badge)](./CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-10b981?style=for-the-badge)](./LICENSE)
 [![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5+-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -49,6 +49,8 @@
 
 - [📋 Giới thiệu](#-giới-thiệu)
 - [✨ Tính năng chính](#-tính-năng-chính)
+- [📈 Báo cáo & Nhật ký hệ thống](#-báo-cáo--nhật-ký-hệ-thống)
+- [📄 Phân trang chuẩn production](#-phân-trang-chuẩn-production)
 - [🏗️ Kiến trúc ứng dụng](#️-kiến-trúc-ứng-dụng)
 - [🛠️ Công nghệ sử dụng](#️-công-nghệ-sử-dụng)
 - [📂 Cấu trúc thư mục](#-cấu-trúc-thư-mục)
@@ -63,6 +65,7 @@
 - [🐛 Xử lý sự cố](#-xử-lý-sự-cố-thường-gặp)
 - [🚀 Deployment](#-deployment)
 - [🗺️ Roadmap](#️-roadmap)
+- [🤝 Contributing](#-contributing)
 
 </td>
 </tr>
@@ -72,7 +75,7 @@
 
 ## 📋 Giới thiệu
 
-> **Coffee Shop Admin Dashboard** là giao diện quản trị (Admin Panel) cho hệ thống quản lý quán cà phê, cho phép chủ quán vận hành toàn bộ nghiệp vụ từ một nơi duy nhất: sản phẩm, danh mục, đơn hàng, bàn, hóa đơn, khuyến mãi, người dùng và báo cáo — với dữ liệu thống kê trực quan.
+> **Coffee Shop Admin Dashboard** là giao diện quản trị (Admin Panel) cho hệ thống quản lý quán cà phê, cho phép chủ quán vận hành toàn bộ nghiệp vụ từ một nơi duy nhất: sản phẩm, danh mục, đơn hàng, bàn, hóa đơn, khuyến mãi, người dùng, nhật ký hệ thống và báo cáo — với dữ liệu thống kê trực quan.
 
 Dự án được thiết kế theo hướng **module hóa theo tính năng (feature-based)**: mỗi nghiệp vụ là một thư mục độc lập gồm trang, component, hook, schema validate, hằng số và hàm tiện ích riêng; tầng gọi API được tách riêng trong `src/api/`.
 
@@ -87,11 +90,13 @@ Dự án được thiết kế theo hướng **module hóa theo tính năng (fea
 | | |
 |---|---|
 | 🧩 | **Module hóa triệt để** — mỗi nghiệp vụ theo cùng convention `index / create / edit / show` + `components / constants / hooks / schemas / utils` |
+| 📄 | **Phân trang chuẩn production** — áp dụng cho `product`, `orders`, `orderitems`, `bill`; tải dữ liệu theo từng trang, giữ nguyên bộ lọc/tìm kiếm khi chuyển trang |
+| 📊 | **Báo cáo hoàn chỉnh** — báo cáo doanh thu và báo cáo đơn hàng với bộ lọc thời gian, biểu đồ và bảng số liệu |
+| 📝 | **Nhật ký hệ thống (Log)** — theo dõi hoạt động trong hệ thống phục vụ kiểm tra và truy vết |
 | 🔐 | **Auth an toàn** — Access Token + Refresh Token lưu trong **HttpOnly cookie**, JavaScript không thể đọc được token → giảm rủi ro bị đánh cắp qua XSS |
 | ♻️ | **Tự động refresh phiên** — khi access token hết hạn, axios interceptor tự gọi refresh và thử lại request |
 | 🗂️ | **Quản lý dữ liệu server bằng React Query** — cache, refetch, invalidate sau mỗi mutation (`src/lib/queryClient.js`) |
 | ✅ | **Validate form bằng schema** — mỗi module có `schemas/*Schema.js` tách biệt khỏi giao diện |
-| 📊 | **Báo cáo & thống kê** — dashboard tổng quan, báo cáo doanh thu, đơn hàng, tồn kho |
 
 ---
 
@@ -114,6 +119,7 @@ Dự án được thiết kế theo hướng **module hóa theo tính năng (fea
 - CRUD sản phẩm kèm upload hình ảnh
 - Lọc theo danh mục, tìm kiếm
 - Cảnh báo tồn kho (`ProductStockWarning`)
+- **Phân trang** danh sách sản phẩm
 
 ### 🏷️ Quản lý Danh mục (`category/`)
 - CRUD danh mục sản phẩm
@@ -130,35 +136,73 @@ Dự án được thiết kế theo hướng **module hóa theo tính năng (fea
 - Danh sách, lọc, tìm kiếm đơn hàng
 - Cập nhật trạng thái (`orderStatus`)
 - Xem trước hóa đơn đơn hàng (`OrderReceiptPreview`)
+- **Phân trang** danh sách đơn hàng
 
 ### 🧾 Chi tiết đơn hàng (`orderitems/`)
 - CRUD các món trong đơn
 - Theo dõi thay đổi từng món (`OrderItemChangeIndicator`)
 - Xem trước phiếu (`OrderItemReceiptPreview`)
+- **Phân trang** danh sách chi tiết đơn hàng
 
 ### 💰 Quản lý Hóa đơn (`bill/`)
 - Tạo, xem, chỉnh sửa hóa đơn
 - Cấu hình phương thức thanh toán (`paymentConfig`)
 - Xem trước biên lai (`BillReceiptPreview`)
+- **Phân trang** danh sách hóa đơn
 
 ### 🎁 Quản lý Khuyến mãi (`promotions/`)
 - CRUD chương trình khuyến mãi
 - Chọn sản phẩm áp dụng (`ProductSelector`)
 - Xem trước voucher (`VoucherPreviewCard`)
 
+### 📝 Nhật ký hệ thống (`log/`) ✅
+- Theo dõi lịch sử hoạt động trong hệ thống
+
 ### 📈 Báo cáo (`reports/`)
-- `revenue.jsx` — báo cáo doanh thu
-- `order-report.jsx` — báo cáo đơn hàng
+- `revenue.jsx` — báo cáo doanh thu ✅
+- `order-report.jsx` — báo cáo đơn hàng ✅
 - `inventory-report.jsx` — báo cáo tồn kho
 
 ### 🧰 Các trang khác
-- `campaigns` · `reviews` · `roles` · `log` · `settings` · `help` · `profile`
+- `campaigns` · `reviews` · `roles` · `settings` · `help` · `profile`
 
 </td>
 </tr>
 </table>
 
 > 🔑 Các module nghiệp vụ chính (`user`, `product`, `category`, `orders`, `orderitems`, `bill`, `tables`, `promotions`) đều tuân theo cùng một convention thư mục — xem [Convention của một module](#-convention-của-một-module).
+
+---
+
+## 📈 Báo cáo & Nhật ký hệ thống
+
+| Trang | File | Mô tả | Trạng thái |
+|---|---|---|:---:|
+| 💵 Báo cáo doanh thu | `reports/revenue.jsx` | Thống kê doanh thu theo khoảng thời gian, biểu đồ xu hướng và bảng số liệu | ✅ Hoàn thiện |
+| 🧾 Báo cáo đơn hàng | `reports/order-report.jsx` | Thống kê số lượng và trạng thái đơn hàng theo khoảng thời gian | ✅ Hoàn thiện |
+| 📦 Báo cáo tồn kho | `reports/inventory-report.jsx` | Theo dõi tồn kho sản phẩm | ✅ Hoàn thiện |
+| 📝 Nhật ký hệ thống | `log/index.jsx` | Lịch sử hoạt động trong hệ thống để kiểm tra và truy vết | ✅ Hoàn thiện |
+
+---
+
+## 📄 Phân trang chuẩn production
+
+Các trang danh sách có lượng dữ liệu lớn đều dùng cơ chế phân trang thống nhất, thay vì tải toàn bộ dữ liệu một lần:
+
+| Module | Trang danh sách | Trạng thái |
+|---|---|:---:|
+| 📦 Sản phẩm | `product/index.jsx` | ✅ |
+| 📋 Đơn hàng | `orders/index.jsx` | ✅ |
+| 🧾 Chi tiết đơn hàng | `orderitems/index.jsx` | ✅ |
+| 💰 Hóa đơn | `bill/index.jsx` | ✅ |
+
+**Nguyên tắc áp dụng:**
+
+- 🔌 **Dùng chung một component** `widgets/pagination/Pagination` cho mọi trang → giao diện và hành vi đồng nhất
+- 📡 **Tải dữ liệu theo từng trang** qua React Query; mỗi trang được cache riêng, chuyển trang mượt và không nhấp nháy
+- 🔎 **Giữ nguyên bộ lọc & tìm kiếm** khi chuyển trang; tự quay về trang 1 khi thay đổi điều kiện lọc
+- 🔄 **Invalidate đúng cache** sau khi tạo / sửa / xóa để danh sách luôn chính xác
+- 🧱 **Tách logic ra hook** (`useXxx`) — page chỉ ghép component, không xử lý phân trang trực tiếp
 
 ---
 
@@ -169,7 +213,7 @@ flowchart LR
     subgraph UI["🖥️ React App"]
         P[Pages<br/>pages/dashboard/*]
         H[Hooks<br/>useXxx · useXxxMutations]
-        W[Widgets<br/>cards · charts · layout]
+        W[Widgets<br/>cards · charts · layout · pagination]
         CTX[Context API<br/>global UI state]
     end
 
@@ -212,6 +256,7 @@ flowchart LR
 | **Routing** | React Router DOM v6 |
 | **Global State** | React Context API (`src/context`) |
 | **Form & Validation** | Custom hooks (`useXxxForm`) + schema (`schemas/*Schema.js`) |
+| **Phân trang** | Component dùng chung `widgets/pagination` + hook theo từng module |
 | **Thông báo** | Toast helper (`src/lib/toast.js`) |
 | **Biểu đồ** | `StatisticsChart` + cấu hình tại `configs/charts-config.js` |
 | **Authentication** | Access Token + Refresh Token trong **HttpOnly Cookie** |
@@ -232,11 +277,11 @@ Frontend(Coffee-Admin)/
 │   │   ├── axiosClient.js          # Axios instance + interceptor refresh token
 │   │   ├── AuthAPI.js              # Đăng nhập / refresh / đăng xuất
 │   │   ├── userApi.js
-│   │   ├── productApi.js
+│   │   ├── productApi.js           # Hỗ trợ phân trang
 │   │   ├── categoryApi.js
-│   │   ├── orderApi.js
-│   │   ├── orderitemApi.js
-│   │   ├── billApi.js
+│   │   ├── orderApi.js             # Hỗ trợ phân trang
+│   │   ├── orderitemApi.js         # Hỗ trợ phân trang
+│   │   ├── billApi.js              # Hỗ trợ phân trang
 │   │   ├── tableApi.js
 │   │   └── promotionApi.js
 │   │
@@ -261,11 +306,11 @@ Frontend(Coffee-Admin)/
 │   │       ├── 📁 tables/          # │
 │   │       ├── 📁 promotions/      # ┘
 │   │       │
-│   │       ├── 📁 reports/         # revenue · order-report · inventory-report
+│   │       ├── 📁 reports/         # revenue ✅ · order-report ✅ · inventory-report 🚧
+│   │       ├── 📁 log/             # Nhật ký hệ thống ✅
 │   │       ├── 📁 campaigns/       # index.jsx
 │   │       ├── 📁 reviews/         # index.jsx
 │   │       ├── 📁 roles/           # index.jsx
-│   │       ├── 📁 log/             # index.jsx
 │   │       ├── 📁 settings/        # index.jsx
 │   │       └── 📁 help/            # index.jsx
 │   │
@@ -274,7 +319,7 @@ Frontend(Coffee-Admin)/
 │   │   ├── charts/                 # StatisticsChart
 │   │   ├── layout/                 # Sidenav, Navbar, DashboardNavbar, Footer, Configurator
 │   │   ├── loaders/                # CoffeeLoader
-│   │   └── pagination/             # Pagination
+│   │   └── pagination/             # Pagination (dùng chung cho các trang danh sách)
 │   │
 │   ├── App.jsx                     # Component gốc
 │   ├── main.jsx                    # Entry point
@@ -309,7 +354,7 @@ product/
 ├── 📁 hooks/           # useProducts · useProductForm · useProductMutations · useProductStats
 ├── 📁 schemas/         # productSchema.js — validate dữ liệu form
 ├── 📁 utils/           # formatters.js — format tiền, ngày, trạng thái
-├── index.jsx           # Danh sách (list)
+├── index.jsx           # Danh sách (list) — có phân trang
 ├── create.jsx          # Tạo mới
 ├── edit.jsx            # Chỉnh sửa
 └── show.jsx            # Xem chi tiết
@@ -319,12 +364,12 @@ product/
 |---|---|
 | **Page** (`index/create/edit/show.jsx`) | Ghép component + hook, không chứa logic nghiệp vụ nặng |
 | **Components** | Phần giao diện thuần, nhận dữ liệu qua props |
-| **Hooks** | Lấy dữ liệu (query), ghi dữ liệu (mutation), xử lý form, tính thống kê |
+| **Hooks** | Lấy dữ liệu (query, phân trang), ghi dữ liệu (mutation), xử lý form, tính thống kê |
 | **Schemas** | Quy tắc validate form |
 | **Constants** | Thông báo, nhãn trạng thái, cấu hình hiển thị |
 | **Utils** | Hàm format thuần |
 
-> ➕ **Thêm module mới:** copy một module có sẵn, đổi tên, thêm file `api/xxxApi.js`, rồi khai báo route trong `src/routes.jsx`.
+> ➕ **Thêm module mới:** copy một module có sẵn, đổi tên, thêm file `api/xxxApi.js`, rồi khai báo route trong `src/routes.jsx`. Nếu trang danh sách có nhiều dữ liệu, dùng lại `widgets/pagination`.
 
 ---
 
@@ -486,6 +531,7 @@ export default axiosClient;
 - Set cookie với `HttpOnly`, `Secure` (production/HTTPS) và `SameSite` phù hợp
 - Cấu hình CORS **`allowCredentials(true)`** và `allowedOrigins` là origin cụ thể (**không** dùng `*`)
 - Có endpoint refresh token và endpoint logout (xóa cookie)
+- Các endpoint danh sách (`products`, `orders`, `order-items`, `bills`) hỗ trợ tham số phân trang
 
 ---
 
@@ -499,19 +545,45 @@ export default axiosClient;
 Mỗi nghiệp vụ có một file API riêng, được các hook (`useXxx`, `useXxxMutations`) gọi thông qua React Query:
 
 <details>
-<summary><b>📄 Xem ví dụ một module API</b></summary>
+<summary><b>📄 Xem ví dụ một module API (có phân trang)</b></summary>
 
 ```javascript
 // src/api/productApi.js
 import axiosClient from './axiosClient';
 
 export const productApi = {
-  getAll: () => axiosClient.get('/products'),
+  // params: { page, size, keyword, categoryId, ... }
+  getAll: (params) => axiosClient.get('/products', { params }),
   getById: (id) => axiosClient.get(`/products/${id}`),
   create: (data) => axiosClient.post('/products', data),
   update: (id, data) => axiosClient.put(`/products/${id}`, data),
   delete: (id) => axiosClient.delete(`/products/${id}`),
 };
+```
+
+</details>
+
+<details>
+<summary><b>📄 Xem ví dụ hook lấy dữ liệu theo trang</b></summary>
+
+```javascript
+// src/pages/dashboard/product/hooks/useProducts.js
+import { useState } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { productApi } from '@/api/productApi';
+
+export function useProducts(filters = {}) {
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+
+  const query = useQuery({
+    queryKey: ['products', { page, size, ...filters }],
+    queryFn: () => productApi.getAll({ page, size, ...filters }),
+    placeholderData: keepPreviousData, // giữ dữ liệu cũ khi đang tải trang mới
+  });
+
+  return { ...query, page, setPage, size, setSize };
+}
 ```
 
 </details>
@@ -538,6 +610,14 @@ Thường do cookie không được gửi kèm. Kiểm tra:
 config.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
 config.setAllowCredentials(true);
 ```
+</details>
+
+<details>
+<summary><b>❌ Danh sách hiển thị sai số trang / dữ liệu cũ sau khi thêm, sửa, xóa</b></summary><br>
+
+1. Đảm bảo mutation gọi `invalidateQueries` đúng `queryKey` của module
+2. Khi thay đổi bộ lọc hoặc từ khóa tìm kiếm, reset `page` về trang đầu
+3. Kiểm tra backend trả đúng tổng số bản ghi / tổng số trang
 </details>
 
 <details>
@@ -609,9 +689,14 @@ gh-pages -d dist
 
 - [x] CRUD đầy đủ: người dùng, sản phẩm, danh mục, đơn hàng, chi tiết đơn, bàn, hóa đơn, khuyến mãi
 - [x] Authentication Access Token + Refresh Token với HttpOnly cookie
-- [x] Dashboard thống kê và các trang báo cáo
+- [x] Dashboard thống kê tổng quan
 - [x] Tách module theo feature (components / hooks / schemas / constants / utils)
-- [ ] Hoàn thiện các trang `campaigns`, `reviews`, `roles`, `log`, `settings`, `help`
+- [x] Phân trang chuẩn production cho `product`, `orders`, `orderitems`, `bill`
+- [x] Hoàn thiện trang **Nhật ký hệ thống** (`log`)
+- [x] Hoàn thiện **Báo cáo doanh thu** (`revenue`) và **Báo cáo đơn hàng** (`order-report`)
+- [ ] Hoàn thiện **Báo cáo tồn kho** (`inventory-report`)
+- [ ] Hoàn thiện các trang `campaigns`, `reviews`, `roles`, `settings`, `help`
+- [ ] Áp dụng phân trang cho các module còn lại (`user`, `category`, `tables`, `promotions`)
 - [ ] Dark mode
 - [ ] Export báo cáo Excel/PDF trực tiếp từ dashboard
 - [ ] Viết unit test cho các component và hook chính
