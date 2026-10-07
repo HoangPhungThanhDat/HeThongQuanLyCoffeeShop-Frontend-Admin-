@@ -2,7 +2,7 @@
 
 <img src="public/img/favicon.png" width="72" alt="coffee icon"/>
 
-# ☕ Coffee Shop Admin Dashboard
+#  Coffee Shop Admin Dashboard
 ## Giao Diện Quản Trị (Frontend — Admin)
 
 **Một nơi duy nhất để vận hành cả quán cà phê — sản phẩm, đơn hàng, bàn, hóa đơn, khuyến mãi, nhật ký hệ thống, báo cáo và thống kê**
@@ -694,13 +694,13 @@ gh-pages -d dist
 - [x] Phân trang chuẩn production cho `product`, `orders`, `orderitems`, `bill`
 - [x] Hoàn thiện trang **Nhật ký hệ thống** (`log`)
 - [x] Hoàn thiện **Báo cáo doanh thu** (`revenue`) và **Báo cáo đơn hàng** (`order-report`)
-- [ ] Hoàn thiện **Báo cáo tồn kho** (`inventory-report`)
-- [ ] Hoàn thiện các trang `campaigns`, `reviews`, `roles`, `settings`, `help`
+- [x] Hoàn thiện **Báo cáo tồn kho** (`inventory-report`)
+- [x] Hoàn thiện các trang `campaigns`, `reviews`, `roles`, `settings`, `help`
 - [ ] Áp dụng phân trang cho các module còn lại (`user`, `category`, `tables`, `promotions`)
 - [ ] Dark mode
-- [ ] Export báo cáo Excel/PDF trực tiếp từ dashboard
+- [x] Export báo cáo Excel/PDF trực tiếp từ dashboard
 - [ ] Viết unit test cho các component và hook chính
-- [ ] Thông báo đẩy (push notification) cho đơn hàng mới
+- [x] Thông báo đẩy (push notification) cho đơn hàng mới
 
 ---
 
@@ -732,7 +732,7 @@ Phát hành theo giấy phép **MIT** — xem chi tiết tại [`LICENSE`](./LIC
 
 **Tác giả: Hoàng Đạt**
 
-[![Email](https://img.shields.io/badge/Email-dat147714%40gmail.com-EA4335?style=flat-square&logo=gmail&logoColor=white)](mailto:dat147714@gmail.com)
+[![Email](https://img.shields.io/badge/Email-hoangdat.engineer%40gmail.com-EA4335?style=flat-square&logo=gmail&logoColor=white)](mailto:hoangdat.engineer@gmail.com)
 [![GitHub](https://img.shields.io/badge/GitHub-HoangPhungThanhDat-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/HoangPhungThanhDat)
 
 <br>
